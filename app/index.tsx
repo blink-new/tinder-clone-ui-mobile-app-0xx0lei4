@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, Dimensions, Image, Pressable, Modal } from "react-native";
 import Animated, {
   useSharedValue,
@@ -9,6 +9,7 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import { PanGestureHandler } from "react-native-gesture-handler";
+import { useAnimatedGestureHandler } from "react-native-reanimated";
 import { Heart, X, Info } from "lucide-react-native";
 
 const { width, height } = Dimensions.get("window");
@@ -84,6 +85,7 @@ export default function HomeScreen() {
   const swipeX = useSharedValue(0);
   const swipeY = useSharedValue(0);
   const [current, setCurrent] = useState(0);
+
   const [likeOpacity, setLikeOpacity] = useState(0);
   const [nopeOpacity, setNopeOpacity] = useState(0);
 
@@ -117,41 +119,35 @@ export default function HomeScreen() {
     transform: [{ rotate: "20deg" }],
   }));
 
-  const onGestureEvent = Animated.event(
-    [
-      {
-        nativeEvent: {
-          translationX: (x) => {
-            swipeX.value = x;
-          },
-          translationY: (y) => {
-            swipeY.value = y;
-          },
-        },
-      },
-    ],
-    { useNativeDriver: true }
-  );
-
-  const onHandlerStateChange = (event) => {
-    const { translationX } = event.nativeEvent;
-    if (translationX > 120) {
-      swipeX.value = withTiming(width * 1.5, { duration: 200 }, () => {
-        runOnJS(handleSwipe)("like");
-      });
-      setLikeOpacity(1);
-    } else if (translationX < -120) {
-      swipeX.value = withTiming(-width * 1.5, { duration: 200 }, () => {
-        runOnJS(handleSwipe)("nope");
-      });
-      setNopeOpacity(1);
-    } else {
-      swipeX.value = withSpring(0);
-      swipeY.value = withSpring(0);
-      setLikeOpacity(0);
-      setNopeOpacity(0);
-    }
-  };
+  // Reanimated v2+ gesture handler
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      ctx.startX = swipeX.value;
+      ctx.startY = swipeY.value;
+    },
+    onActive: (event, ctx) => {
+      swipeX.value = ctx.startX + event.translationX;
+      swipeY.value = ctx.startY + event.translationY;
+    },
+    onEnd: (event, ctx) => {
+      if (swipeX.value > 120) {
+        swipeX.value = withTiming(width * 1.5, { duration: 200 }, () => {
+          runOnJS(handleSwipe)("like");
+        });
+        runOnJS(setLikeOpacity)(1);
+      } else if (swipeX.value < -120) {
+        swipeX.value = withTiming(-width * 1.5, { duration: 200 }, () => {
+          runOnJS(handleSwipe)("nope");
+        });
+        runOnJS(setNopeOpacity)(1);
+      } else {
+        swipeX.value = withSpring(0);
+        swipeY.value = withSpring(0);
+        runOnJS(setLikeOpacity)(0);
+        runOnJS(setNopeOpacity)(0);
+      }
+    },
+  });
 
   const currentProfile = profiles[current];
   const nextProfile = profiles[current + 1];
@@ -165,10 +161,7 @@ export default function HomeScreen() {
           </Animated.View>
         )}
         {currentProfile ? (
-          <PanGestureHandler
-            onGestureEvent={onGestureEvent}
-            onEnded={onHandlerStateChange}
-          >
+          <PanGestureHandler onGestureEvent={gestureHandler}>
             <Animated.View style={[styles.cardAnimated, animatedCardStyle, { zIndex: 1 }]}>
               <ProfileCard profile={currentProfile} onPress={() => setModalProfile(currentProfile)} />
               <Animated.View style={[styles.likeBadge, animatedLikeStyle]}>
@@ -190,7 +183,7 @@ export default function HomeScreen() {
           style={[styles.actionButton, { backgroundColor: COLORS.nope }]}
           onPress={() => {
             swipeX.value = withTiming(-width * 1.5, { duration: 200 }, () => {
-              runOnJS(handleSwipe)("nope");
+              handleSwipe("nope");
             });
             setNopeOpacity(1);
           }}
@@ -201,7 +194,7 @@ export default function HomeScreen() {
           style={[styles.actionButton, { backgroundColor: COLORS.like }]}
           onPress={() => {
             swipeX.value = withTiming(width * 1.5, { duration: 200 }, () => {
-              runOnJS(handleSwipe)("like");
+              handleSwipe("like");
             });
             setLikeOpacity(1);
           }}
