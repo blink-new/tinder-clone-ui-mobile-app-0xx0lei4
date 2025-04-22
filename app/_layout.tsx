@@ -1,5 +1,5 @@
 
-import { Stack, Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import { useFonts, Montserrat_700Bold, Montserrat_400Regular } from "@expo-google-fonts/montserrat";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -44,7 +44,7 @@ export default function RootLayout() {
           name="index"
           options={{
             title: "Home",
-            tabBarIcon: ({ color, size }) => {
+            tabBarIcon: ({ color }) => {
               const Icon = require("lucide-react-native").Flame;
               return <Icon color={color} size={28} />;
             },
@@ -54,7 +54,7 @@ export default function RootLayout() {
           name="matches"
           options={{
             title: "Matches",
-            tabBarIcon: ({ color, size }) => {
+            tabBarIcon: ({ color }) => {
               const Icon = require("lucide-react-native").Heart;
               return <Icon color={color} size={28} />;
             },
@@ -64,7 +64,7 @@ export default function RootLayout() {
           name="profile"
           options={{
             title: "Profile",
-            tabBarIcon: ({ color, size }) => {
+            tabBarIcon: ({ color }) => {
               const Icon = require("lucide-react-native").User;
               return <Icon color={color} size={28} />;
             },
