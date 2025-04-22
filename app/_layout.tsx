@@ -3,11 +3,8 @@ import { Stack, Tabs } from "expo-router";
 import { useFonts, Montserrat_700Bold, Montserrat_400Regular } from "@expo-google-fonts/montserrat";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useFrameworkReady } from "expo-router/build/hooks";
 
 export default function RootLayout() {
-  useFrameworkReady(); // DO NOT REMOVE OR MODIFY
-
   const [fontsLoaded] = useFonts({
     Montserrat_700Bold,
     Montserrat_400Regular,
